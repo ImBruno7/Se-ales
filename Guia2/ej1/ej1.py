@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def main():
-    # El eje de tiempo discreto 'n'
     n = np.arange(-5, 16) # Vamos desde -5 hasta 15 para ver el antes y el después
 
     # Pulso rectangular de amplitud 1 entre n=0 y n=5
@@ -18,9 +17,9 @@ def main():
     # Sistema 2: y[n] = sumatoria de x[k] desde k=n-no hasta n+no (Filtro de media móvil)
     no = 2
     y2 = np.zeros_like(n, dtype=float)
-    # Recorremos cada instante 'n' para aplicar la ventana
+    # Recorremos cada instante 'n'
+    
     for i, n_instante in enumerate(n):
-        # Armamos una máscara lógica para agarrar solo las muestras dentro de la ventana
         ventana = (n >= n_instante - no) & (n <= n_instante + no)
         y2[i] = np.sum(x[ventana])
 

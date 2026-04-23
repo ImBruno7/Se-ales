@@ -8,7 +8,7 @@ def main():
     N = 30
     n_x = np.arange(N)
 
-    # (Campana de Gauss
+    # Campana de Gauss
     x = np.exp(-0.5 * ((n_x - 7) / 2.0)**2)
 
     # Señal h: Un retardo zarpado en n=22 que empuja la montañita 20 lugares hacia la derecha
