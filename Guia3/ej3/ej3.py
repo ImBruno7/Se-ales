@@ -42,6 +42,30 @@ def main():
     # Mostrar el gráfico
     plt.show()
 
+    #parte 3
+    max_coef = 10
+    vECT_historial = np.zeros(max_coef)
+    y_aprox = 0
+
+    for n in range(max_coef):
+        alfa_n, phi_n = fG3.calcular_termino_legendre(n, t, y)
+        
+        y_aprox += alfa_n * phi_n
+        
+        # Calculamos el ECT de esta iteración
+        vECT_historial[n] = np.sum((y - y_aprox)**2) 
+
+    print(f"Aproximacion con 2 (en realidad 4) coeficientes: {vECT_historial[3]}")
+
+    # Graficar la curva
+    plt.figure()
+    plt.plot(range(1, max_coef + 1), vECT_historial, marker='o', color='red')
+    plt.title('Evolución del ECT al sumar coeficientes de Legendre')
+    plt.xlabel('Cantidad de coeficientes utilizados')
+    plt.ylabel('Error Cuadrático Total')
+    plt.grid(True)
+    plt.show()
+
 if __name__ == "__main__":
     
     main()
