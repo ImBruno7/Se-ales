@@ -22,7 +22,7 @@ def detectar_tecla(pedacito):
     fila = fG3.obtener_mejor_frecuencia(pedacito, freqs_filas)
     columna = fG3.obtener_mejor_frecuencia(pedacito, freqs_columnas)
     
-    # Cruzamos los datos en el diccionario y devolvemos el string
+    # Cruzamos los datos en el diccionario (seria un map) y devolvemos el string
     return teclado[(fila, columna)]
 
 def main():
@@ -72,9 +72,6 @@ def main():
         
     print(f"Num de telfeono: {numero_descubierto}")
     
-
-    
-
 
 
 if __name__ == "__main__":
