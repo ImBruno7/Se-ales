@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib as plot
 
-def generar_senoidal(fs, fm, phi, t_inicio, t_fin):
+def generar_senoidal(A, fs, fm, phi, t_inicio, t_fin):
     """
     fs: Frecuencia de la senoidal (Hz)
     fm: Frecuencia de muestreo (Hz)
@@ -9,28 +9,28 @@ def generar_senoidal(fs, fm, phi, t_inicio, t_fin):
     t_inicio: Tiempo inicial (s)
     t_fin: Tiempo final (s)
     """
-    #paso = 1 / fm # Definimos el paso de tiempo (1/fm)
+    num_muestras = int((t_fin - t_inicio) * fm)
     
-    # Creamos el vector de tiempo t desde t_inicio hasta t_fin inclusive (np.arange para mantener el paso constante)
-    num_muestras = int((t_fin - t_inicio) * fm) + 1
-    t = np.linspace(t_inicio, t_fin, num_muestras)
+    t = np.arange(num_muestras) / fm + t_inicio
     
     # Ecuación: y(t) = sen(2π * fs * t + phi)
     y = np.sin(2 * np.pi * fs * t + phi)
     
-    return t, y
+    return t, A*y
 
 def generar_sync(fs, fm, t_inicio, t_fin):
-    paso = 1 / fm
-    t = np.arange(t_inicio, t_fin+paso, paso)
+    num_muestras = int((t_fin - t_inicio) * fm)
+    
+    t = np.arange(num_muestras) / fm + t_inicio
     x = 2 * np.pi * fs * t
     y = np.where(x!=0,np.sin(x)/x,1.0)
 
     return t,y
 
 def generar_onda_cuadrada(fs, fm, phi, t_inicio, t_fin):
-    paso = 1 / fm
-    t = np.arange(t_inicio, t_fin+paso, paso)
+    num_muestras = int((t_fin - t_inicio) * fm)
+    
+    t = np.arange(num_muestras) / fm + t_inicio
     x = np.mod(2 * np.pi * fs * t + phi,2 * np.pi)
     y = np.where(x<np.pi,1.0,-1.0)
 
@@ -42,25 +42,31 @@ def sinc_interpoladora(x):
     return np.where(pi_x != 0, np.sin(pi_x) / pi_x, 1.0)
 
 def interpolar(x,y,fm0,fm1,func):
-    T = 1/fm0
+    """
+    x: Vector de tiempo original (baja resolución)
+    y: Valores de la señal original
+    fm0: Frecuencia de muestreo original
+    fm1: Frecuencia de muestreo nueva (alta resolución)
+    func: Función kernel (usualmente sinc_interpoladora)
+    """
+    T = 1 / fm0
+    duracion = len(x) / fm0
     
-    #generamos el nuevo x
-    duracion = x[-1] - x[0] # Esto da 2 si vas de 0 a 2
-    n_puntos = int(duracion * fm1) + 1
-    x_nuevo = np.linspace(x[0], x[-1], n_puntos)
-
+    # Generamos el nuevo eje x 
+    n_puntos = int(duracion * fm1)
+    x_nuevo = np.arange(n_puntos) / fm1 + x[0]
     
     y_nuevo = []
 
-    # Para cada tiempo nuevo, calculamos la sumatoria
     for ti in x_nuevo:
-        # (ti - nT) / T  <-- Esto es un vector de distancias
+        # Calculamos la distancia de cada punto nuevo a todos los puntos originales
+        # (ti - nT) / T
         argumento = (ti - x) / T
         
-        # Aplicamos la función sinc nuestra
+        # Obtenemos los pesos usando el kernel (sinc)
         pesos = func(argumento)
         
-        # Sumatoria: y_orig[n] * sinc(...)
+        # La sumatoria: cada muestra original aporta un poquito a la nueva
         valor_interp = np.sum(y * pesos)
         y_nuevo.append(valor_interp)
 
