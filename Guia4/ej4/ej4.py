@@ -23,11 +23,6 @@ def main():
     _, F_angosta, _ = fg4.procesar_y_centrar(vent_angosta, fm) # Magnitud ventana angosta
     _, F_impulso, _ = fg4.procesar_y_centrar(impulso, fm)      # Magnitud del impulso
 
-    #delta_f = fm / N 
-    #mitad = N // 2 
-    #k = np.arange(-mitad, N - mitad)
-    #frecuencias = k * delta_f  # Frecuencias calculadas a mano
-
     fig, axs = plt.subplots(3, 2, figsize=(14, 10))
     fig.suptitle('Relación de Dispersión Tiempo-Frecuencia', fontsize=14, fontweight='bold')
 
