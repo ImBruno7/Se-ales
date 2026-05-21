@@ -4,9 +4,9 @@ import Guia4.funcionesG4 as fg4
 import Guia1.ej1.funciones as f1
 
 def main():
-    fm = 360                                     # Frecuencia de muestreo (360 muestras/seg)
+    fm = 360                                  
     
-    s = np.loadtxt('Guia4/necg.txt')                       # Carga directa de los datos del archivo
+    s = np.loadtxt('Guia4/necg.txt')                
     N = len(s)
     t = np.arange(N) / fm                        # Vector de tiempo real
     
