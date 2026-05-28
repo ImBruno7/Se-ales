@@ -37,14 +37,14 @@ def main():
     #parte 3
     print("\n" + "="*40)
     print("Parte 3")
-    _,s3 = f1.generar_senoidal(A = 1, fs = 3.5, fm = 100, phi = 0, t_inicio = 0, t_fin = 1)
+    _,s3 = f1.generar_senoidal(A = 1, fs = 3.6, fm = 100, phi = 0, t_inicio = 0, t_fin = 1)
 
     Ps1s3 = np.vdot(s1,s3)
-    print(f"Prod Interno S1 y S3: {Ps1s3:.3f}")
+    print(f"Prod Interno S1 y S3: {Ps1s3:.13f}")
 
     tf3 = np.fft.fft(s3)
     Ptf1tf3 = np.vdot(tf1,tf3)
-    print(f"Prod Interno TF1 y TF3: {Ptf1tf3:.3f}")
+    print(f"Prod Interno TF1 y TF3: {Ptf1tf3:.12f}")
 
 if __name__ == "__main__":
     main()
