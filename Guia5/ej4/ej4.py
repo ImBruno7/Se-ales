@@ -5,79 +5,107 @@ def H(s):
     h = (12500 * s) / (44*(s**2)+60625*s+625*(10**4))
     return h
 
-def euler(z,T):
+def Euler(z,T):
     s = (1 - z**-1) / T
     return s
 
-def bilineal(z,T):
+def Bilineal(z,T):
     s = (2 / T) * ((1 - z**-1)/(1 + z**-1))
     return s
 
+def dB(magnitud):
+    # Convierte magnitud a decibeles
+    return 10 * np.log10(np.abs(magnitud))
+
 def main():
-    # PARTE 1: Determinar la frecuencia de corte y de muestreo
-    f_test = np.linspace(1, 1000, 50000)
-    s_test = 1j * 2 * np.pi * f_test
-    mag_test = np.abs(H(s_test))
+    # valor arbitrario para la frecuencia de muestreo   
+    fmtest = 15000
+    ftest = np.arange(fmtest//2)
+    sTest = 2j * np.pi * ftest          # s = jw = j2pif
 
-    # Buscamos el pico máximo y calculamos el umbral de caída de -3dB (dividir por raíz de 2)
-    mag_max = np.max(mag_test)
-    mag_3db = mag_max / np.sqrt(2)
+    H_frecuencia = np.abs(H(sTest))    # H(s) -> respuesta en frecuencia
+    fMax = np.argmax(H_frecuencia)      # w donde H(s) tiene máxima magnitud
+    maxMag = H_frecuencia[fMax]
+    indices_validos = np.where(H_frecuencia >= maxMag / np.sqrt(2))[0]
+    fCorte = ftest[indices_validos[-1]]
 
-    # Filtramos dónde la gráfica está por encima de los -3dB
-    indices_3db = np.where(mag_test >= mag_3db)[0]
-    fc1 = f_test[indices_3db[0]]   # La primera vez que cruza el umbral (corte inferior)
-    fc2 = f_test[indices_3db[-1]]  # La última vez que cruza el umbral (corte superior)
-
-    # Usamos fc2 para evitar el aliasing de la banda más alta.
-    fm = 4 * fc2
+    # fm = 4 x fc
+    fm = 4 * fCorte
     T = 1 / fm
+    f = np.arange(fm // 2)
+    z = np.exp(2j*np.pi*f*T)            # z = e^j2*pi*f*T
+    s = 2j*np.pi*f                      # s = j2*pi*f
+    HEuler = H(Euler(z, T))           # H(z) mediante transformación de Euler
+    HBilineal = H(Bilineal(z, T))     # H(z) mediante transformación bilineal
 
-    # Imprimimos los resultados en la consola para el profe
-    print("--- RESULTADOS PARTE 1 ---")
-    print(f"Frecuencia de corte inferior (fc1): {fc1:.2f} Hz")
-    print(f"Frecuencia de corte superior (fc2): {fc2:.2f} Hz")
-    print(f"Frecuencia de muestreo calculada (fm = 4*fc2): {fm:.2f} Hz")
-    print(f"Periodo de muestreo (T): {T:.6f} s\n")
+    #fm = 8 x fc #########
+    fm2 = 8 * fCorte
+    T2 = 1 / fm2
+    f2 = np.arange(fm2 // 2)
+    z2 = np.exp(2j*np.pi*f2*T2)         # z = e^j2pi f T
+    s2 = 2j*np.pi*f2                    # s = j2*pi*f
+    HEuler2 = H(Euler(z2, T2))        # H(z) mediante transformación de Euler
+    HBilineal2 = H(Bilineal(z2, T2))  # H(z) mediante transformación bilineal
 
-    # PARTE 2: Análisis de respuesta en frecuencia
-    f = np.linspace(0.1, fm/2, 1000) #(desde casi 0 hasta Nyquist: fm/2)
+    ######### Graficas #########
+    fig, ax = plt.subplots(3, 1, figsize=(15, 10))
+    for axi in ax:
+        axi.grid()
 
-    # A. Analógico Original
-    s_analogico = 1j * 2 * np.pi * f
-    H_analog = H(s_analogico)
-    mag_analog_db = 20 * np.log10(np.abs(H_analog))
+    # fc
+    ax[0].plot(ftest, dB(H_frecuencia))
+    ax[0].plot(fMax, dB(H_frecuencia[fMax]), 'go')
+    ax[0].plot(fCorte, dB(H_frecuencia[fCorte]), 'ro')
+    ax[0].set_title('Magnitud del sistema continuo (dB)')
+    ax[0].set_xlabel('Frecuencia [Hz]')
+    ax[0].set_ylabel('Magnitud [dB]')
 
-    # B. Discretos (Mapeo a Z)
-    z = np.exp(1j * 2 * np.pi * f / fm)
+    # fm = 4 x fc
+    ax[1].plot(f, dB(H(s)), 'b', label='$H(s)$')
+    ax[1].plot(f, dB(HEuler), 'r', label='Euler')
+    ax[1].plot(f, dB(HBilineal), 'g', label='Bilineal')
+    ax[1].set_title(f'Respuestas discretas con $f_m = 4 \\times f_c = {fm} Hz$')
+    ax[1].set_xlabel('Frecuencia [Hz]')
+    ax[1].set_ylabel('Magnitud [dB]')
+    ax[1].legend()
 
-    s_eu = euler(z, T)
-    H_euler = H(s_eu)
-    mag_euler_db = 20 * np.log10(np.abs(H_euler))
-
-    s_bil = bilineal(z, T)
-    H_bilineal = H(s_bil)
-    mag_bilineal_db = 20 * np.log10(np.abs(H_bilineal))
-
-    #grafica
-    fig, ax = plt.subplots(figsize=(11, 5))
-    
-    ax.plot(f, mag_analog_db, color='black', linewidth=3, label='Analógico Original H(s)')
-    ax.plot(f, mag_euler_db, color='red', linestyle='--', linewidth=2, label='Euler H(z)')
-    ax.plot(f, mag_bilineal_db, color='blue', linestyle='-.', linewidth=2, label='Bilineal H(z)')
-
-    # Línea vertical para marcar visualmente el corte y notar el desfase
-    ax.axvline(fc2, color='gray', linestyle=':', linewidth=2, label=f'Corte Superior Analógico ({fc2:.1f} Hz)')
-
-    ax.set_title(f'Comparación de Transformaciones (fm = {fm:.1f} Hz)', fontweight='bold')
-    ax.set_xlabel('Frecuencia [Hz]')
-    ax.set_ylabel('Magnitud [dB]')
-    ax.set_xlim(0, fm/2)
-    ax.set_ylim(-40, 5)  # Acotamos para que se vea claro el detalle del pico
-    ax.grid(True, linestyle=':')
-    ax.legend(loc='lower left')
+    # fm = 8 x fc
+    ax[2].plot(f2, dB(H(s2)), 'b', label='$H(s)$')
+    ax[2].plot(f2, dB(HEuler2), 'r', label='Euler')
+    ax[2].plot(f2, dB(HBilineal2), 'g', label='Bilineal')
+    ax[2].set_title(f'Respuestas discretas con $f_m = 8 \\times f_c = {fm2} Hz$')
+    ax[2].set_xlabel('Frecuencia [Hz]')
+    ax[2].set_ylabel('Magnitud [dB]')
+    ax[2].legend()
 
     plt.tight_layout()
     plt.show()
+
+    #Gráfica enfocada
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    ax.plot(f, dB(H(s)), 'k-', linewidth=3, label='H(s) Ideal (Continuo)')
+    ax.plot(f, dB(HEuler), 'r--', linewidth=2, label='Euler H(z)')
+    ax.plot(f, dB(HBilineal), 'b-.', linewidth=2, label='Bilineal H(z)')
+
+    # Marcamos el corte analógico original con un punto para ver quién le pega más cerca
+    ax.plot(fCorte, dB(H_frecuencia[fCorte]), 'ko', markersize=8, label=f'Corte Ideal ({fCorte:.1f} Hz)')
+
+    ax.set_title('Vista Detallada del Lóbulo Principal (Demostración de Fidelidad)', fontweight='bold')
+    ax.set_xlabel('Frecuencia [Hz]')
+    ax.set_ylabel('Magnitud [dB]')
+    
+    # Recortamos los ejes para centrar la imagen en la parte más alta de la campana
+    ax.set_xlim(0, 600)
+    ax.set_ylim(-15, -6) 
+    
+    ax.grid(True, linestyle=':')
+    ax.legend()
+
+    plt.tight_layout()
+    plt.show()
+
 
 if __name__ == "__main__":
     main()
